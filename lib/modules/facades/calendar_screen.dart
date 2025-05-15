@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/routes/app_routes.dart';
 import '../../shared/models/event_model.dart';
 import '../../shared/services/event_service.dart';
@@ -55,30 +54,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final controller = TextEditingController(text: _events[date]![index]);
     await showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Editar evento'),
-            content: TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: 'Nueva descripción'),
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () => Navigator.pop(context),
-              ),
-              ElevatedButton(
-                child: const Text('Guardar'),
-                onPressed: () {
-                  setState(() {
-                    _events[date]![index] = controller.text;
-                  });
-                  _eventService.saveEvents(_events);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Editar evento'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Nueva descripción'),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancelar'),
+            onPressed: () => Navigator.pop(context),
           ),
+          ElevatedButton(
+            child: const Text('Guardar'),
+            onPressed: () {
+              setState(() {
+                _events[date]![index] = controller.text;
+              });
+              _eventService.saveEvents(_events);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -107,120 +105,126 @@ class _CalendarScreenState extends State<CalendarScreen> {
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // Engrenagem no topo direito
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed:
-                        () => _handleSecretTap(_selectedDay ?? DateTime.now()),
-                    tooltip: 'Configuración',
-                  ),
-                ],
-              ),
-
-              // Calendário
-              TableCalendar(
-                locale: 'es_ES',
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: _getEventsForDay,
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  _handleSecretTap(selectedDay);
-                },
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary,
-                    shape: BoxShape.circle,
-                  ),
-                  weekendTextStyle: const TextStyle(color: Colors.redAccent),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Campo e botão de adicionar evento
-              if (_selectedDay != null)
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _eventController,
-                        decoration: const InputDecoration(
-                          labelText: 'Añadir Evento',
-                          border: UnderlineInputBorder(),
-                        ),
-                        onSubmitted: (_) => _addEvent(_selectedDay!),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      // Engrenagem
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.settings),
+                            onPressed: () => _handleSecretTap(_selectedDay ?? DateTime.now()),
+                            tooltip: 'Configuración',
+                          ),
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => _addEvent(_selectedDay!),
-                    ),
-                  ],
-                ),
 
-              const SizedBox(height: 12),
+                      // Calendário
+                      TableCalendar(
+                        locale: 'es_ES',
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focusedDay,
+                        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                        eventLoader: _getEventsForDay,
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                          });
+                          _handleSecretTap(selectedDay);
+                        },
+                        calendarStyle: CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                          weekendTextStyle: const TextStyle(color: Colors.redAccent),
+                        ),
+                      ),
 
-              // Lista de eventos
-              if (_selectedDay != null)
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _getEventsForDay(_selectedDay!).length,
-                    itemBuilder: (context, index) {
-                      final event = _getEventsForDay(_selectedDay!)[index];
-                      return ListTile(
-                        title: Text(event),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      const SizedBox(height: 16),
+
+                      // Campo e botão de adicionar evento
+                      if (_selectedDay != null)
+                        Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed:
-                                  () => _editEvent(
-                                    DateTime(
-                                      _selectedDay!.year,
-                                      _selectedDay!.month,
-                                      _selectedDay!.day,
-                                    ),
-                                    index,
-                                  ),
+                            Expanded(
+                              child: TextField(
+                                controller: _eventController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Añadir Evento',
+                                  border: UnderlineInputBorder(),
+                                ),
+                                onSubmitted: (_) => _addEvent(_selectedDay!),
+                              ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed:
-                                  () => _deleteEvent(
-                                    DateTime(
-                                      _selectedDay!.year,
-                                      _selectedDay!.month,
-                                      _selectedDay!.day,
-                                    ),
-                                    index,
-                                  ),
+                              icon: const Icon(Icons.add_circle_outline),
+                              onPressed: () => _addEvent(_selectedDay!),
                             ),
                           ],
                         ),
-                      );
-                    },
+
+                      const SizedBox(height: 12),
+
+                      // Lista de eventos
+                      if (_selectedDay != null)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _getEventsForDay(_selectedDay!).length,
+                          itemBuilder: (context, index) {
+                            final event = _getEventsForDay(_selectedDay!)[index];
+                            return ListTile(
+                              title: Text(event),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () => _editEvent(
+                                      DateTime(
+                                        _selectedDay!.year,
+                                        _selectedDay!.month,
+                                        _selectedDay!.day,
+                                      ),
+                                      index,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () => _deleteEvent(
+                                      DateTime(
+                                        _selectedDay!.year,
+                                        _selectedDay!.month,
+                                        _selectedDay!.day,
+                                      ),
+                                      index,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
