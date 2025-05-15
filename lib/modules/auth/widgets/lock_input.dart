@@ -94,15 +94,11 @@ class _LockInputState extends State<LockInput> with TickerProviderStateMixin {
                   '*' * _inputPassword.length,
                   style: const TextStyle(fontSize: 30, letterSpacing: 10),
                 ),
-                GestureDetector(
-                  onTap: _removeLastDigit,
-                  child: Icon(Icons.backspace, color: Colors.red, size: 30),
-                ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Grid de botões 1 a 9 + 0
+            // Grid de botões 1 a 9 + 0 + Apagar e Check
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(8.0),
@@ -112,23 +108,25 @@ class _LockInputState extends State<LockInput> with TickerProviderStateMixin {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
-                itemCount: 11, // Agora são 10 botões (1 a 9 e o 0)
+                itemCount: 12, // 10 números + 1 botão de apagar + 1 botão check
                 itemBuilder: (context, index) {
                   if (index == 9) {
-                    // Adiciona um separador entre o 9 e o 10
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(32),
-                      ),
+                    // Botão '0'
+                    return _buildButton('0', theme, isDarkMode);
+                  } else if (index == 10) {
+                    // Botão de apagar
+                    return _buildDeleteButton(theme, isDarkMode);
+                  } else if (index == 11) {
+                    // Botão de check
+                    return _buildCheckButton(theme, isDarkMode);
+                  } else {
+                    // Botões de 1 a 9
+                    return _buildButton(
+                      (index + 1).toString(),
+                      theme,
+                      isDarkMode,
                     );
                   }
-                  // Adiciona o botão '0' como o último item
-                  return _buildButton(
-                    (index == 10) ? '0' : (index + 1).toString(),
-                    theme,
-                    isDarkMode,
-                  );
                 },
               ),
             ),
@@ -164,6 +162,66 @@ class _LockInputState extends State<LockInput> with TickerProviderStateMixin {
               fontSize: 30,
               color: isDarkMode ? Colors.black : Colors.white,
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Método para criar o botão de apagar
+  Widget _buildDeleteButton(ThemeData theme, bool isDarkMode) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final color =
+            _isIncorrectPassword
+                ? Colors.red
+                : (isDarkMode ? Colors.red.shade700 : Colors.red.shade400);
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.all(20),
+            shape: CircleBorder(),
+            backgroundColor: color,
+            textStyle: const TextStyle(fontSize: 22),
+          ),
+          onPressed: _removeLastDigit,
+          child: Icon(
+            Icons.backspace,
+            color: isDarkMode ? Colors.black : Colors.white,
+            size: 30,
+          ),
+        );
+      },
+    );
+  }
+
+  // Método para criar o botão de check
+  Widget _buildCheckButton(ThemeData theme, bool isDarkMode) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final color =
+            _isIncorrectPassword
+                ? Colors.red
+                : (isDarkMode ? Colors.teal.shade900 : Colors.teal.shade600);
+        return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.all(20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
+            backgroundColor: color,
+            textStyle: const TextStyle(fontSize: 22),
+          ),
+          onPressed: () {
+            if (_inputPassword.length == 4) {
+              _checkPassword();
+            }
+          },
+          child: Icon(
+            Icons.check,
+            color: isDarkMode ? Colors.black : Colors.white,
+            size: 30,
           ),
         );
       },
