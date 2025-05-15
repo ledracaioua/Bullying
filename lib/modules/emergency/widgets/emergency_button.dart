@@ -9,7 +9,15 @@ class EmergencyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: onPressed,
-      child: const Text('Emergencia'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.redAccent,
+        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        elevation: 10,
+        shadowColor: Colors.black.withOpacity(0.2),
+        textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+      child: const Text('Emergência'),
     );
   }
 }

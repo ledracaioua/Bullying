@@ -1,53 +1,142 @@
-// lib/modules/config/config_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/services/contact_service.dart';
 import 'widgets/contact_form.dart';
 import '../../core/routes/app_routes.dart';
 
-class ConfigScreen extends StatelessWidget {
-  final ContactService contactService = ContactService();
-
-  ConfigScreen({super.key});
+class ConfigScreen extends StatefulWidget {
+  const ConfigScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Configuraciones de Emergencia')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Seleccionar Fachada:'),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 10,
-              children: [
-                _buildFacadeButton(context, 'Finanzas', AppRoutes.home),
-                _buildFacadeButton(context, 'Calendario', AppRoutes.calendar),
-                _buildFacadeButton(
-                  context,
-                  'Calculadora',
-                  AppRoutes.calculator,
-                ),
-                _buildFacadeButton(context, 'Notas', AppRoutes.notes),
-              ],
+  ConfigScreenState createState() => ConfigScreenState();
+}
+
+class ConfigScreenState extends State<ConfigScreen> {
+  bool _isDarkModeEnabled = false;
+  final ContactService contactService = ContactService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemePreference();
+  }
+
+  Future<void> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkModeEnabled = prefs.getBool('isDarkModeEnabled') ?? false;
+    });
+  }
+
+  Future<void> _saveThemePreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isDarkModeEnabled', value);
+  }
+
+  void _toggleTheme(bool value) {
+    setState(() {
+      _isDarkModeEnabled = value;
+    });
+    _saveThemePreference(value);
+    (context as Element).markNeedsBuild();
+  }
+
+  Widget _buildFacadeCarousel() {
+    final facades = [
+      {
+        'label': 'Finanças',
+        'route': AppRoutes.home,
+        'icon': Icons.account_balance_wallet,
+      },
+      {
+        'label': 'Calendário',
+        'route': AppRoutes.calendar,
+        'icon': Icons.calendar_month,
+      },
+      {
+        'label': 'Calculadora',
+        'route': AppRoutes.calculator,
+        'icon': Icons.calculate,
+      },
+      {'label': 'Notas', 'route': AppRoutes.notes, 'icon': Icons.note_alt},
+    ];
+
+    return SizedBox(
+      height: 140,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: facades.length,
+        itemBuilder: (context, index) {
+          final facade = facades[index];
+          return GestureDetector(
+            onTap: () {
+              AppRoutes.currentFacade = facade['route'] as String;
+              Navigator.pushNamed(context, facade['route'] as String);
+            },
+            child: Container(
+              width: 120,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    facade['icon'] as IconData,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    facade['label'] as String,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            ContactForm(contactService: contactService),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildFacadeButton(BuildContext context, String label, String route) {
-    return ElevatedButton(
-      onPressed: () {
-        AppRoutes.currentFacade = route;
-        Navigator.pushNamed(context, route);
-      },
-      child: Text(label),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(title: const Text('Configurações de Emergência')),
+      body: SingleChildScrollView(
+        // Para evitar overflow em telas menores
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Modo Escuro', style: TextStyle(fontSize: 16)),
+            Switch(value: _isDarkModeEnabled, onChanged: _toggleTheme),
+            const SizedBox(height: 20),
+
+            const Text('Selecionar Fachada:', style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 10),
+            _buildFacadeCarousel(),
+            const SizedBox(height: 20),
+
+            ContactForm(contactService: contactService),
+          ],
+        ),
+      ),
     );
   }
 }

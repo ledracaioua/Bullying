@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../core/routes/app_routes.dart';
 import './widgets/emergency_confirm.dart';
 
 class EmergencyScreen extends StatefulWidget {
@@ -10,18 +9,32 @@ class EmergencyScreen extends StatefulWidget {
   State<EmergencyScreen> createState() => _EmergencyScreenState();
 }
 
-class _EmergencyScreenState extends State<EmergencyScreen> {
+class _EmergencyScreenState extends State<EmergencyScreen>
+    with TickerProviderStateMixin {
   int _secondsRemaining = 10;
   late Timer _timer;
   bool _isCancelled = false;
+  late AnimationController _animationController;
+  late Animation<double> _countdownScale;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+
+    // Animation controller for countdown number scale
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+
+    // Countdown scale animation
+    _countdownScale = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(_animationController);
   }
 
-  // Inicia a contagem regressiva
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0 && !_isCancelled) {
@@ -31,13 +44,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       } else {
         _timer.cancel();
         if (!_isCancelled) {
-          _triggerEmergency(); // Chama emergência quando o tempo acabar
+          _triggerEmergency();
         }
       }
     });
   }
 
-  // Chama a tela de emergência confirmada
   void _triggerEmergency() {
     Navigator.pushReplacement(
       context,
@@ -45,70 +57,98 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     );
   }
 
-  // Cancela a contagem regressiva
   void _cancelTimer() {
     setState(() {
       _isCancelled = true;
     });
     _timer.cancel();
-    Navigator.pop(context); // Volta para a tela anterior após o cancelamento
+    Navigator.pop(context);
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode =
+        Theme.of(context).brightness ==
+        Brightness.dark; // Verifica o modo escuro
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Emergência'),
-        backgroundColor: Colors.red,
-      ),
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 50.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Animação de contagem regressiva
             Text(
               'Contagem regressiva para emergência',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(color: Colors.red),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+                fontSize: 28,
+                letterSpacing: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            Text(
-              '$_secondsRemaining',
-              style: TextStyle(
-                fontSize: 80,
-                fontWeight: FontWeight.bold,
-                color: _secondsRemaining > 3 ? Colors.green : Colors.red,
-              ),
-            ),
             const SizedBox(height: 40),
-            // Botão para cancelar
+            AnimatedBuilder(
+              animation: _countdownScale,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _countdownScale.value,
+                  child: Text(
+                    '$_secondsRemaining',
+                    style: TextStyle(
+                      fontSize: 120,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          _secondsRemaining > 5
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(2, 2),
+                          blurRadius: 5,
+                          color: Colors.black.withOpacity(0.7),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 60),
             ElevatedButton(
               onPressed: _cancelTimer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor:
+                    _secondsRemaining > 5
+                        ? Colors.greenAccent
+                        : Colors.redAccent,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 50,
-                  vertical: 15,
+                  horizontal: 60,
+                  vertical: 18,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(15),
                 ),
+                elevation: 10,
+                shadowColor: Colors.black.withOpacity(0.3),
               ),
               child: const Text(
                 'Cancelar Emergência',
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(
+                  fontSize: 22,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

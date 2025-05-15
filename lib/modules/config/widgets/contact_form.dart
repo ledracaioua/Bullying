@@ -1,4 +1,3 @@
-// lib/modules/config/widgets/contact_form.dart
 import 'package:flutter/material.dart';
 import '../../../shared/models/contact_model.dart';
 import '../../../shared/services/contact_service.dart';
@@ -27,7 +26,8 @@ class _ContactFormState extends State<ContactForm> {
     super.dispose();
   }
 
-  void _saveContacts() {
+  // Salvar os contatos no SharedPreferences
+  void _saveContacts() async {
     final contact1 = ContactModel(
       name: _nameController1.text,
       phoneNumber: _phoneController1.text,
@@ -38,42 +38,61 @@ class _ContactFormState extends State<ContactForm> {
       phoneNumber: _phoneController2.text,
     );
 
-    widget.contactService.setContacts([contact1, contact2]);
+    await widget.contactService.setContacts([contact1, contact2]);
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Contactos guardados')));
+    ).showSnackBar(const SnackBar(content: Text('Contatos guardados')));
+  }
+
+  // Carregar os contatos salvos
+  Future<void> _loadContacts() async {
+    final contacts = await widget.contactService.getContacts();
+    if (contacts.isNotEmpty) {
+      _nameController1.text = contacts[0].name;
+      _phoneController1.text = contacts[0].phoneNumber;
+      if (contacts.length > 1) {
+        _nameController2.text = contacts[1].name;
+        _phoneController2.text = contacts[1].phoneNumber;
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts(); // Carregar os contatos quando o formulário for exibido
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text('Contacto de Emergencia 1'),
+        const Text('Contacto de Emergência 1'),
         TextField(
           controller: _nameController1,
-          decoration: const InputDecoration(labelText: 'Nombre'),
+          decoration: const InputDecoration(labelText: 'Nome'),
         ),
         TextField(
           controller: _phoneController1,
-          decoration: const InputDecoration(labelText: 'Teléfono'),
+          decoration: const InputDecoration(labelText: 'Telefone'),
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 20),
-        const Text('Contacto de Emergencia 2'),
+        const Text('Contacto de Emergência 2'),
         TextField(
           controller: _nameController2,
-          decoration: const InputDecoration(labelText: 'Nombre'),
+          decoration: const InputDecoration(labelText: 'Nome'),
         ),
         TextField(
           controller: _phoneController2,
-          decoration: const InputDecoration(labelText: 'Teléfono'),
+          decoration: const InputDecoration(labelText: 'Telefone'),
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _saveContacts,
-          child: const Text('Guardar Contactos'),
+          child: const Text('Salvar Contatos'),
         ),
       ],
     );

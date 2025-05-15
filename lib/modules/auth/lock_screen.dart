@@ -11,6 +11,9 @@ class LockScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: LockInput(onUnlock: () => _onUnlockSuccess(context)));
+    return Scaffold(
+      // Removemos o AppBar aqui
+      body: LockInput(onUnlock: () => _onUnlockSuccess(context)),
+    );
   }
 }
