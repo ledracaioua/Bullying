@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../core/routes/app_routes.dart';
+import '../config/config_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -69,26 +70,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final controller = TextEditingController(text: _events[date]![index]);
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Editar evento'),
-        content: TextField(controller: controller),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Editar evento'),
+            content: TextField(controller: controller),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _events[date]![index] = controller.text;
+                  });
+                  _saveEvents();
+                  Navigator.pop(context);
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _events[date]![index] = controller.text;
-              });
-              _saveEvents();
-              Navigator.pop(context);
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -128,7 +130,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   IconButton(
                     icon: const Icon(Icons.settings),
                     onPressed: () {
-                      _handleSecretTap(_selectedDay ?? DateTime.now());
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => ConfigScreen(
+                                isDarkModeEnabled:
+                                    Theme.of(context).brightness ==
+                                    Brightness.dark,
+                                onThemeChanged: (bool value) {
+                                  // Aqui você deve implementar a alteração real do tema
+                                },
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -207,25 +222,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit),
-                            onPressed: () => _editEvent(
-                              DateTime(
-                                _selectedDay!.year,
-                                _selectedDay!.month,
-                                _selectedDay!.day,
-                              ),
-                              index,
-                            ),
+                            onPressed:
+                                () => _editEvent(
+                                  DateTime(
+                                    _selectedDay!.year,
+                                    _selectedDay!.month,
+                                    _selectedDay!.day,
+                                  ),
+                                  index,
+                                ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteEvent(
-                              DateTime(
-                                _selectedDay!.year,
-                                _selectedDay!.month,
-                                _selectedDay!.day,
-                              ),
-                              index,
-                            ),
+                            onPressed:
+                                () => _deleteEvent(
+                                  DateTime(
+                                    _selectedDay!.year,
+                                    _selectedDay!.month,
+                                    _selectedDay!.day,
+                                  ),
+                                  index,
+                                ),
                           ),
                         ],
                       ),

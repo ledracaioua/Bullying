@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../core/routes/app_routes.dart'; // Asegúrate de usar el path correcto
+import '../../core/routes/app_routes.dart';
 import 'widgets/finance_summary_card.dart';
+import '../config/config_screen.dart'; // importar para poder usar direto
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  // Exemplo: você precisa adaptar esses valores conforme seu app real
+  final bool isDarkModeEnabled = false;
+  void onThemeChanged(bool value) {
+    // Implementar alteração real do tema
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +21,16 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.config);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => ConfigScreen(
+                        isDarkModeEnabled: isDarkModeEnabled,
+                        onThemeChanged: onThemeChanged,
+                      ),
+                ),
+              );
             },
           ),
         ],

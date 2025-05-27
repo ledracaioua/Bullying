@@ -29,7 +29,7 @@ class AppRoutes {
     splash: (_) => const SplashScreen(),
     home: (_) => const HomeScreen(),
     emergency: (_) => const EmergencyScreen(),
-    config: (_) => ConfigScreen(),
+    //config: (_) => ConfigScreen(),
     lock: (_) => const LockScreen(),
 
     // Rutas de fachadas

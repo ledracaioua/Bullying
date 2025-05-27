@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'modules/config/config_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -27,6 +28,12 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  void updateTheme(bool isDark) {
+    setState(() {
+      _isDarkModeEnabled = isDark;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -35,9 +42,15 @@ class _MyAppState extends State<MyApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: _isDarkModeEnabled ? ThemeMode.dark : ThemeMode.light,
-      initialRoute:
-          AppRoutes.home, // ou AppRoutes.splash se houver tela de splash
-      routes: AppRoutes.routes,
+      initialRoute: AppRoutes.home,
+      routes: {
+        ...AppRoutes.routes,
+        AppRoutes.config:
+            (context) => ConfigScreen(
+              isDarkModeEnabled: _isDarkModeEnabled,
+              onThemeChanged: updateTheme,
+            ),
+      },
       locale: const Locale('es', 'ES'),
       supportedLocales: const [Locale('es', 'ES')],
       localizationsDelegates: const [

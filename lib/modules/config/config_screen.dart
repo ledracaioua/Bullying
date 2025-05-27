@@ -5,32 +5,32 @@ import 'widgets/contact_form.dart';
 import '../../core/routes/app_routes.dart';
 
 class ConfigScreen extends StatefulWidget {
-  const ConfigScreen({super.key});
+  final bool isDarkModeEnabled;
+  final Function(bool) onThemeChanged;
+
+  const ConfigScreen({
+    super.key,
+    required this.isDarkModeEnabled,
+    required this.onThemeChanged,
+  });
 
   @override
   ConfigScreenState createState() => ConfigScreenState();
 }
 
 class ConfigScreenState extends State<ConfigScreen> {
-  bool _isDarkModeEnabled = false;
+  late bool _isDarkModeEnabled;
   final ContactService contactService = ContactService();
 
   @override
   void initState() {
     super.initState();
-    _loadThemePreference();
-  }
-
-  Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkModeEnabled = prefs.getBool('isDarkModeEnabled') ?? false;
-    });
+    _isDarkModeEnabled = widget.isDarkModeEnabled;
   }
 
   Future<void> _saveThemePreference(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setBool('isDarkModeEnabled', value);
+    await prefs.setBool('isDarkModeEnabled', value);
   }
 
   void _toggleTheme(bool value) {
@@ -38,7 +38,7 @@ class ConfigScreenState extends State<ConfigScreen> {
       _isDarkModeEnabled = value;
     });
     _saveThemePreference(value);
-    (context as Element).markNeedsBuild();
+    widget.onThemeChanged(value); // Atualiza o tema no MyApp
   }
 
   Widget _buildFacadeCarousel() {
@@ -58,7 +58,11 @@ class ConfigScreenState extends State<ConfigScreen> {
         'route': AppRoutes.calculator,
         'icon': Icons.calculate,
       },
-      {'label': 'Notas', 'route': AppRoutes.notes, 'icon': Icons.note_alt},
+      {
+        'label': 'Notas',
+        'route': AppRoutes.notes,
+        'icon': Icons.note_alt,
+      },
     ];
 
     return SizedBox(
@@ -79,7 +83,7 @@ class ConfigScreenState extends State<ConfigScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
                     blurRadius: 4,
